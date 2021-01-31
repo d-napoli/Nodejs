@@ -9,8 +9,8 @@ const executaQuery = (query, parametros = '') => {
     // resejct = algum erro aconteceu
     return new Promise((resolve, reject) => {
         conexao.query(query, parametros, (erros, resultados, campos) => {
-            if(erro) {
-                console.log(erro)
+            if(erros) {
+                console.log(erros)
                 reject(erros) // ao invés de dar um return, vamos mandar um reject
                               // e a camada de cima da aplicação lida com essa informação de rejeição
             } else {
@@ -19,3 +19,5 @@ const executaQuery = (query, parametros = '') => {
         })
     })
 }
+
+module.exports = executaQuery

@@ -2,59 +2,63 @@ const axios = require('axios')
 const moment = require('moment')
 const { query } = require('../infraestrutura/database/conexao')
 const conexao = require('../infraestrutura/database/conexao')
+const repositorio = require('../repositorios/atendimentos')
 
 class Atendimento {
-    adiciona(atendimento, res) {
-        const formatoData = 'YYYY-MM-DD HH:MM:SS'
-        
-        const dataCriacao = moment().format(formatoData)
-        const data = moment(atendimento.data, 'DD/MM/YYYY').format(formatoData)
-        
-        const dataEhValida = moment(data).isSameOrAfter(dataCriacao) // validando se a data não é no passado
-        const clienteEhValido = atendimento.cliente.length >= 5 // validando o tamanho do nome do cliente
+    constructor() {
+        this.dataEhValida = ({data, dataCriacao}) => moment(data).isSameOrAfter(dataCriacao) // validando se a data não é no passado
+        this.clienteEhValido = tamanho => tamanho >= 5 // validando o tamanho do nome do cliente
 
-        const validacoes = [
+        this.valida = parametros =>
+            this.validacoes.filter(campo => {
+                const { nome } = campo
+                const parametro = parametros[nome]
+
+                return !campo.valido(parametro)
+            })
+
+        this.validacoes = [
             {
                 nome: 'data',
-                valido: dataEhValida,
+                valido: this.dataEhValida,
                 mensagem: 'Data deve ser maior ou igual a data atual'
             },
             {
                 nome: 'cliente',
-                valido: clienteEhValido,
+                valido: this.clienteEhValido,
                 mensagem: 'Nomes precisam ter no mínimo 5 caracteres'
             }
         ]
+    }
 
-        const erros = validacoes.filter(campo => !campo.valido)
+    adiciona(atendimento) {
+        const formatoData = 'YYYY-MM-DD HH:MM:SS'
+        
+        const dataCriacao = moment().format(formatoData)
+        const data = moment(atendimento.data, 'DD/MM/YYYY').format(formatoData)
+
+        const parametros = {
+            data: { data, dataCriacao },
+            cliente: { tamanho: atendimento.cliente.length }
+        }
+
+        const erros = this.valida(parametros)
         const existemErros = erros.length
 
         if(existemErros) {
-            res.status(400).json(erros)
+            return new Promise((resolve, reject) => reject(erros))
         } else {
             const atendimentoDatado = { ...atendimento, dataCriacao, data }
 
-            const sql = "INSERT INTO Atendimentos SET ?"
-            conexao.query(sql, atendimentoDatado, (erro, resultados) => {
-                if(erro) {
-                    res.status(400).json(erro) // altera o status do request para 400 em caso de erro, daí o usuário fica ciente de que alguma coisa errada aconteceu
-                } else {
-                    res.status(201).json(atendimento) // em caso de sucesso, retorna o status de 201, significa que foi criado com sucesso
-                }
+            return repositorio.adiciona(atendimentoDatado).then(resultados => {
+                const id = resultados.insertId
+                return ({ ...atendimento, id })
             })
         }
     }
 
     lista(res) {
-        const sql = 'SELECT * FROM Atendimentos'
-
-        conexao.query(sql, (erro, resultados) => {
-            if(erro) {
-                res.status(400).json(erro)
-            } else {
-                res.status(200).json(resultados)
-            }
-        })
+        return repositorio.lista()
     }
 
     buscaPorId(id, res) {
