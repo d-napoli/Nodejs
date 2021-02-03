@@ -9,7 +9,7 @@ roteador.get('/', async(requisicao, resposta) => {
     )
 })
 
-roteador.post('/', async (requisicao, resposta) => {
+roteador.post('/', async (requisicao, resposta, proximo) => {
     try {
         const dadosRecebidos = requisicao.body
         const fornecedor = new Fornecedor(dadosRecebidos)
@@ -19,15 +19,11 @@ roteador.post('/', async (requisicao, resposta) => {
             JSON.stringify(fornecedor)
         )
     } catch(erro) {
-        resposta.status(400).send(
-            JSON.stringify({
-                mensagem: erro.message
-            })
-        )
+        proximo(erro)
     }
 })
 
-roteador.get('/:idFornecedor', async (requisicao, resposta) => {
+roteador.get('/:idFornecedor', async (requisicao, resposta, proximo) => {
     try {
         const id = requisicao.params.idFornecedor
         const fornecedor = new Fornecedor({ id: id })
@@ -36,32 +32,25 @@ roteador.get('/:idFornecedor', async (requisicao, resposta) => {
             JSON.stringify(fornecedor)
         )
     } catch(erro) {
-        resposta.status(404).send(
-            JSON.stringify({
-                mensagem: erro.message
-            })
-        )
+        proximo(erro)
     }
 })
 
-roteador.put('/:idFornecedor', async (requisicao, resposta) => {
+roteador.put('/:idFornecedor', async (requisicao, resposta, proximo) => {
     try {
         const id = requisicao.params.idFornecedor
         const dadosRecebidos = requisicao.body
         const dados = Object.assign({}, dadosRecebidos, { id: id }) // novo objeto criado com o id do fornecedor informado
         const fornecedor = new Fornecedor(dados) // cria um objeto de fornecedor com os dados
         await fornecedor.atualizar()
+        resposta.status(204)
         resposta.end()
     } catch(erro) {
-        resposta.status(404).send(
-            JSON.stringify({
-                mensagem: erro.message
-            })
-        )
+        proximo(erro)
     }
 })
 
-roteador.delete('/:idFornecedor', async (requisicao, resposta) => {
+roteador.delete('/:idFornecedor', async (requisicao, resposta, proximo) => {
     try {
         const id = requisicao.params.idFornecedor
         const fornecedor = new Fornecedor({ id: id })
@@ -71,11 +60,7 @@ roteador.delete('/:idFornecedor', async (requisicao, resposta) => {
         await fornecedor.remover()
         resposta.end()
     } catch(erro) {
-        resposta.status(404).send(
-            JSON.stringify({
-                mensagem: erro.message
-            })
-        )
+        proximo(erro)
     }
 })
 
