@@ -33,15 +33,34 @@ class Serializador {
 }
 
 class SerializadorFornecedor extends Serializador {
-    constructor(contentType) {
+    constructor(contentType, camposExtras) {
         super()
         this.contentType = contentType
-        this.camposPublicos = ['id', 'empresa', 'categoria'] // nova lista
+        this.camposPublicos = [ // lista de campos públicos de fornecedores
+                                // porém é possível adicionar campos extras além desses informados
+                                // portanto vamos fazer o concat dos campos extras ao fim da função
+                                // caso a variável "campos extras" venha vazia, é informado um array sem nada
+            'id',
+            'empresa',
+            'categoria'
+        ].concat(camposExtras || []) 
+    }
+}
+
+class SerializadorErro extends Serializador {
+    constructor(contentType, camposExtras) {
+        super()
+        this.contentType = contentType
+        this.camposPublicos = [
+            'mensagem',
+            'id'
+        ].concat(camposExtras || [])
     }
 }
 
 module.exports = {
     Serializador: Serializador,
     SerializadorFornecedor: SerializadorFornecedor,
+    SerializadorErro: SerializadorErro,
     formatosAceitos: ['application/json']
 }

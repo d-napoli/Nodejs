@@ -33,7 +33,11 @@ roteador.get('/:idFornecedor', async (requisicao, resposta, proximo) => {
         const id = requisicao.params.idFornecedor
         const fornecedor = new Fornecedor({ id: id })
         await fornecedor.carregar()
-        const serializador = new SerializadorFornecedor(resposta.getHeader('Content-Type'))
+        const serializador = new SerializadorFornecedor(
+            resposta.getHeader('Content-Type'),
+            ['email', 'dataCriacao', 'dataAtualizacao', 'versao'] // campos extras que queremos trazer
+                                                                  // ao consultar detalhes do fornecedor
+        )
         resposta.send(
             serializador.serializar(fornecedor)
         )
