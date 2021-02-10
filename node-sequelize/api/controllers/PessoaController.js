@@ -37,6 +37,41 @@ class PessoaController {
             return res.status(500).json(error.message)
         }
     }
+
+    static async criaPessoa(req, res) {
+        const novaPessoa = req.body // informacoes que recebemos do usuario via requisicao
+
+        try {
+            const novaPessoaCriada = await database.Pessoas.create(novaPessoa)
+            return res.status(200).json(novaPessoaCriada)
+        } catch(error) {
+            return res.status(500).json(error.message)
+        }
+    }
+
+    static async atualizarPessoa(req, res) {
+        const { id } = req.params
+        const novosDados = req.body
+
+        try {
+            await database.Pessoas.update(novosDados, { where: { id: Number(id) } })
+            const pessoaAtualizada = await database.Pessoas.findOne({ where: { id: Number(id) } })
+            return res.status(200).json(pessoaAtualizada)
+        } catch(error) {
+            return res.status(500).json(error.message)
+        }
+    }
+
+    static async deletarPessoa(req, res) {
+        const { id } = req.params
+
+        try {
+            await database.Pessoas.destroy({ where: { id: Number(id) } })
+            return res.status(200).json({ message: `Pessoa de id ${id} deletado com sucesso` })
+        } catch(error) {
+            return res.status(500).json(error.message)
+        }
+    }
 }
 
 module.exports = PessoaController
