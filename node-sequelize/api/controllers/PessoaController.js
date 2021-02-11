@@ -72,6 +72,64 @@ class PessoaController {
             return res.status(500).json(error.message)
         }
     }
+
+    /* =========== Matriculas =========== */
+    static async atualizarMatricula(req, res) {
+        const { matriculaId, estudanteId } = req.params
+        const novosDados = req.body
+
+        try {
+            await database.Matriculas.update(novosDados, { where: { id: Number(matriculaId), estudante_id: Number(estudanteId) } })
+            const MatriculaAtualizada = await database.Matriculas.findOne({ where: { id: Number(matriculaId), estudante_id: Number(estudanteId) } })
+            return res.status(200).json(MatriculaAtualizada)
+        } catch(error) {
+            return res.status(500).json(error.message)
+        }
+    }
+
+    static async deletarMatricula(req, res) {
+        const { matriculaId, estudanteId } = req.params
+
+        try {
+            await database.Matriculas.destroy({ where: { id: Number(matriculaId), estudante_id: Number(estudanteId) } })
+            return res.status(200).json({ message: `Matricula de id ${matriculaId} deletado com sucesso` })
+        } catch(error) {
+            return res.status(500).json(error.message)
+        }
+    }
+
+    static async criaMatricula(req, res) {
+        const { estudanteId } = req.params
+
+        // gerando um novo objeto, é utilizado a técnica de spread, já pega o array que havia sido informado
+        // e concatena com a nova informação de estudanteId que recebemos do parâmetro da requisição
+        const novaMatricula = { ...req.body, estudante_id: Number(estudanteId) } // informacoes que recebemos do usuario via requisicao
+
+        try {
+            const novaMatriculaCriada = await database.Matriculas.create(novaMatricula)
+            return res.status(200).json(novaMatriculaCriada)
+        } catch(error) {
+            return res.status(500).json(error.message)
+        }
+    }
+
+    static async pegaUmaMatricula(req, res) {
+        const { estudanteId, matriculaId } = req.params
+
+        try {
+            const umaMatricula = await database.Matriculas.findOne({
+                where: {
+                    id: Number(matriculaId),
+                    estudante_id: Number(estudanteId)
+                }
+            })
+
+            return res.status(200).json( umaMatricula )
+
+        } catch(error) {
+            return res.status(500).json(error.message)
+        }
+    }
 }
 
 module.exports = PessoaController
