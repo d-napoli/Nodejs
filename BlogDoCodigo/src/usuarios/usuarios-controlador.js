@@ -3,10 +3,20 @@ const { InvalidArgumentError, InternalServerError } = require('../erros');
 
 const jwt = require('jsonwebtoken')
 
+const crypto = require('crypto')
+const moment = require('moment')
+
 function criaTokenJWT(usuario) {
   const payload = { id: usuario.id }
   const token = jwt.sign(payload, process.env.CHAVE_JWT, { expiresIn: '15m' }) // puxa a chave usando o arquivo .env
   return token
+}
+
+function criaTokenOpaco(usuario) {
+  const tokenOpaco = crypto.randomBytes(24).toString('hex')
+  const dataExpiracao = moment().add(5, 'd').unix() // momento atual + 5 dias
+
+  return tokenOpaco
 }
 
 module.exports = {
@@ -34,10 +44,16 @@ module.exports = {
     }
   },
 
-  login: (req, res) => {
-    const token = criaTokenJWT(req.user) // variavel user é criada na hora da autenticação, NÃO é informada pelo usuário"
-    // vamos colocar o token no cabeçalho da resposta
-    res.set('Authorization', token).status(204).send()
+  async login(req, res) {
+    try {
+      const accessToken = criaTokenJWT(req.user)
+      const refreshToken = criaTokenOpaco(req.user)
+
+      res.set('Authorization', accessToken)
+      res.status(200).json({ refreshToken })
+    } catch (erro) {
+      res.status(500).json({ erro: erro.message })
+    }
   },
 
   lista: async (req, res) => {
